@@ -15,6 +15,8 @@ public partial class CameraRenderer
 
     CullingResults cullingResults;
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+    static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
+    Lighting lighting = new Lighting();
 
     public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing)
     {
@@ -25,6 +27,7 @@ public partial class CameraRenderer
         PrepareForSceneWindow();//绘制UI
         if (!Cull()) return;    //裁剪并将结果存入cullingResults
         Setup();                //初始化
+        lighting.Setup(context, cullingResults);//设置照明
         DrawVisibleGeometry(useDynamicBatching,useGPUInstancing);  //绘制可见物体
         DrawUnsupportedShaders();//绘制SRP不支持的着色器类型
         DrawGizmos();           //绘制Gizmos
@@ -81,6 +84,7 @@ public partial class CameraRenderer
             enableDynamicBatching = useDynamicBatching,
             enableInstancing = useGPUInstancing
         };
+        drawingSettings.SetShaderPassName(1, litShaderTagId);
         //只绘制不透明物体，render queue在0-2500
         var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
         //1.不透明物体绘制

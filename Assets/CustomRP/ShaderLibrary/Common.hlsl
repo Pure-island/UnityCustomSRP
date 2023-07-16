@@ -9,6 +9,7 @@
 #define UNITY_MATRIX_VP unity_MatrixVP
 #define UNITY_MATRIX_P glstate_matrix_projection
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 //使用UnityInput里面的字段前先include进来
 #include "UnityInput.hlsl"
 
@@ -26,5 +27,8 @@
 //{
 //	return mul(unity_MatrixVP, float4(positionWS,1.0));
 //}
-
+float Square(float v)
+{
+    return v * v;
+}
 #endif

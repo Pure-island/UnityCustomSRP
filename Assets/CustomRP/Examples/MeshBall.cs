@@ -9,6 +9,8 @@ using UnityEngine;
 public class MeshBall : MonoBehaviour
 {
     static int baseColorId = Shader.PropertyToID("_BaseColor");
+    static int metallicId = Shader.PropertyToID("_Metallic");
+    static int smoothnessId = Shader.PropertyToID("_Smoothness");
     [SerializeField]
     Mesh mesh = default;
     [SerializeField]
@@ -16,6 +18,9 @@ public class MeshBall : MonoBehaviour
 
     Matrix4x4[] matrices = new Matrix4x4[1023];
     Vector4[] baseColors = new Vector4[1023];
+    //添加金属度和光滑度属性调节参数
+    float[] metallic = new float[1023];
+    float[] smoothness = new float[1023];
 
     MaterialPropertyBlock block;
 
@@ -28,6 +33,8 @@ public class MeshBall : MonoBehaviour
                 Quaternion.Euler(Random.value * 360f, Random.value * 360f, Random.value * 360f),
                 Vector3.one * Random.Range(0.5f, 1.5f));
             baseColors[i] = new Vector4(Random.value, Random.value, Random.value, Random.Range(0.5f, 1f));
+            metallic[i] = Random.value < 0.25f ? 1f : 0f;
+            smoothness[i] = Random.Range(0.05f, 0.95f);
         }
     }
 
@@ -38,6 +45,8 @@ public class MeshBall : MonoBehaviour
             //随机属性发送到着色器
             block = new MaterialPropertyBlock();
             block.SetVectorArray(baseColorId, baseColors);
+            block.SetFloatArray(metallicId, metallic);
+            block.SetFloatArray(smoothnessId, smoothness);
         }
         //绘制网格实例
         Graphics.DrawMeshInstanced(mesh, 0, material, matrices, 1023, block);
