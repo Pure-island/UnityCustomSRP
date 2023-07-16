@@ -16,7 +16,7 @@ public partial class CameraRenderer
     CullingResults cullingResults;
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
 
-    public void Render(ScriptableRenderContext context, Camera camera)
+    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing)
     {
         this.context = context;
         this.camera = camera;
@@ -25,7 +25,7 @@ public partial class CameraRenderer
         PrepareForSceneWindow();//绘制UI
         if (!Cull()) return;    //裁剪并将结果存入cullingResults
         Setup();                //初始化
-        DrawVisibleGeometry();  //绘制可见物体
+        DrawVisibleGeometry(useDynamicBatching,useGPUInstancing);  //绘制可见物体
         DrawUnsupportedShaders();//绘制SRP不支持的着色器类型
         DrawGizmos();           //绘制Gizmos
         Submit();               //提交
@@ -71,12 +71,16 @@ public partial class CameraRenderer
     }
 
     //绘制可见物
-    private void DrawVisibleGeometry()
+    private void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing)
     {
         //设置渲染相机的绘制顺序（远到近）
         var sortingSettings = new SortingSettings(camera) { criteria = SortingCriteria.CommonOpaque };
         //设置shader pass和排序模式
-        var drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings);
+        var drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings)
+        {
+            enableDynamicBatching = useDynamicBatching,
+            enableInstancing = useGPUInstancing
+        };
         //只绘制不透明物体，render queue在0-2500
         var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
         //1.不透明物体绘制
