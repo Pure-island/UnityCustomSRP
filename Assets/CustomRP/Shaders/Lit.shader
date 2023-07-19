@@ -15,6 +15,9 @@ Shader "CustomRP/Lit"
 		//金属度和光泽度
 		_Metallic("Metallic", Range(0,1)) = 0
 		_Smoothness("Smoothness", Range(0, 1)) = 0.5
+		//投影模式
+		[KeywordEnum(On, Clip, Dither, Off)] _Shadows ("Shadows", Float) = 0
+		[Toggle(_RECEIVE_SHADOWS)] _ReceiveShadows ("Receive Shadows", Float) = 1
 	}
 	Subshader
 	{
@@ -27,14 +30,37 @@ Shader "CustomRP/Lit"
 			Blend[_SrcBlend][_DstBlend]
 			ZWrite[_ZWrite]
 			HLSLPROGRAM
+			#pragma enable_d3d11_debug_symbols
 			#pragma target 3.5
-			#pragma shader_feature _CLIPPING
+			#pragma shader_feature _CLIPPING			
+			#pragma shader_feature _RECEIVE_SHADOWS
 			//是否透明通道预乘
 			#pragma shader_feature _PREMULTIPLY_ALPHA
+			#pragma multi_compile _ _DIRECTIONAL_PCF3 _DIRECTIONAL_PCF5 _DIRECTIONAL_PCF7
+			#pragma multi_compile _ _CASCADE_BLEND_SOFT _CASCADE_BLEND_DITHER
 			#pragma multi_compile_instancing
 			#pragma vertex LitPassVertex
 			#pragma fragment LitPassFragment
 			#include "LitPass.hlsl"
+			ENDHLSL
+		}
+
+		Pass
+		{
+			Tags 
+			{
+				"LightMode" = "ShadowCaster"
+			}
+			ColorMask 0
+ 
+			HLSLPROGRAM
+			#pragma target 3.5
+			//#pragma shader_feature _CLIPPING
+			#pragma shader_feature _ _SHADOWS_CLIP _SHADOWS_DITHER
+			#pragma multi_compile_instancing
+			#pragma vertex ShadowCasterPassVertex
+			#pragma fragment ShadowCasterPassFragment
+			#include "ShadowCasterPass.hlsl"
 			ENDHLSL
 		}
 	}

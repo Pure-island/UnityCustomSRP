@@ -18,29 +18,34 @@ public partial class CameraRenderer
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
     Lighting lighting = new Lighting();
 
-    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing)
+    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings)
     {
         this.context = context;
         this.camera = camera;
 
         PrepareBuffer();        //设置SampleName
         PrepareForSceneWindow();//绘制UI
-        if (!Cull()) return;    //裁剪并将结果存入cullingResults
-        Setup();                //初始化
-        lighting.Setup(context, cullingResults);//设置照明
+        if (!Cull(shadowSettings.maxDistance)) return;    //裁剪并将结果存入cullingResults
+        buffer.BeginSample(SampleName);
+        ExecuteBuffer();
+        lighting.Setup(context, cullingResults, shadowSettings);//设置照明
+        buffer.EndSample(SampleName);
+        Setup();                                                //初始化                        
         DrawVisibleGeometry(useDynamicBatching,useGPUInstancing);  //绘制可见物体
         DrawUnsupportedShaders();//绘制SRP不支持的着色器类型
         DrawGizmos();           //绘制Gizmos
+        lighting.Cleanup();
         Submit();               //提交
     }
 
 
 
-    private bool Cull()
+    private bool Cull(float maxShadowDistance)
     {
         ScriptableCullingParameters p;
         if(camera.TryGetCullingParameters(out p))   //得到需要进行剔除检查的所有物体
         {
+            p.shadowDistance = Mathf.Min(maxShadowDistance, camera.farClipPlane);
             cullingResults = context.Cull(ref p);   //剔除
             return true;
         }

@@ -27,12 +27,19 @@ public class Lighting
 
     CullingResults cullingResults;
 
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults)
+    Shadows shadows = new Shadows();
+    static int dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData");
+    //存储阴影数据
+    static Vector4[] dirLightShadowData = new Vector4[maxDirLightCount];
+
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, ShadowSettings shadowSettings)
     {
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
+        shadows.Setup(context, cullingResults, shadowSettings);
         //发送光源数据
         SetupLights();
+        shadows.Render();
         buffer.EndSample(bufferName);
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
@@ -64,6 +71,7 @@ public class Lighting
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);
         buffer.SetGlobalVectorArray(dirLightColorsId, dirLightColors);
         buffer.SetGlobalVectorArray(dirLightDirectionsId, dirLightDirections);
+        buffer.SetGlobalVectorArray(dirLightShadowDataId, dirLightShadowData);
     }
 
     //将可见光的光照颜色和方向存储到数组
@@ -71,6 +79,14 @@ public class Lighting
     {
         dirLightColors[index] = visibleLight.finalColor;
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
+
+        //存储阴影数据
+        dirLightShadowData[index] = shadows.ReserveDirectionalShadows(visibleLight.light, index);
     }
 
+    //释放阴影贴图RT内存
+    public void Cleanup()
+    {
+        shadows.Cleanup();
+    }
 }

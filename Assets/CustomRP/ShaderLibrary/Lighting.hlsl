@@ -4,7 +4,7 @@
 
 float3 IncomingLight(Surface surface, Light light)
 {
-    return saturate(dot(surface.normal, light.direction)) * light.color;
+    return saturate(dot(surface.normal, light.direction) * light.attenuation) * light.color;
 }
 
 float3 GetLighting(Surface surface, BRDF brdf, Light light)
@@ -13,13 +13,16 @@ float3 GetLighting(Surface surface, BRDF brdf, Light light)
 }
 
 //得到最终照明结果
-float3 GetLighting(Surface surface, BRDF brdf)
+float3 GetLighting(Surface surfaceWS, BRDF brdf)
 {
-    //可见方向光的照明结果进行累加得到最终照明结果
+    //得到表面阴影数据
+    ShadowData shadowData = GetShadowData(surfaceWS);
+    //可见光的光照结果进行累加得到最终光照结果
     float3 color = 0.0;
     for (int i = 0; i < GetDirectionalLightCount(); i++)
     {
-        color += GetLighting(surface, brdf, GetDirectionalLight(i));
+        Light light = GetDirectionalLight(i, surfaceWS, shadowData);
+        color += GetLighting(surfaceWS, brdf, light);
     }
     return color;
 }
