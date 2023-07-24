@@ -6,13 +6,13 @@ using UnityEngine.Rendering;
 
 public partial class CameraRenderer 
 {
-    private partial void DrawUnsupportedShaders();
+    partial void DrawUnsupportedShaders();
 
-    private partial void DrawGizmos();
+    partial void DrawGizmos();
 
-    private partial void PrepareForSceneWindow();
+    partial void PrepareForSceneWindow();
 
-    private partial void PrepareBuffer();
+    partial void PrepareBuffer();
 
 #if UNITY_EDITOR
     static ShaderTagId[] legacyShaderTagIds =
@@ -27,7 +27,7 @@ public partial class CameraRenderer
 
     static Material errorMaterial;
     //绘制SRP不支持的着色器类型
-    private partial void DrawUnsupportedShaders()
+    partial void DrawUnsupportedShaders()
     {
         if(errorMaterial == null)
         {
@@ -47,7 +47,7 @@ public partial class CameraRenderer
         context.DrawRenderers(cullingResults,ref drawingSettings,ref filteringSettings);
     }
 
-    private partial void DrawGizmos()
+    partial void DrawGizmos()
     {
         if(Handles.ShouldRenderGizmos())
         {
@@ -57,7 +57,7 @@ public partial class CameraRenderer
     }
 
     //在game视图绘制的几何体也绘制到Scene视图中
-    private partial void PrepareForSceneWindow()
+    partial void PrepareForSceneWindow()
     {
         if(camera.cameraType == CameraType.SceneView)
         {
@@ -67,7 +67,7 @@ public partial class CameraRenderer
     }
 
     string SampleName { get; set; }
-    private partial void PrepareBuffer()
+    partial void PrepareBuffer()
     {
         //设置只在编辑器模式下才分配内存
         Profiler.BeginSample("Editor Only");

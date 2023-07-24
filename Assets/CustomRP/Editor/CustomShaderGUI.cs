@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -71,6 +70,7 @@ public class CustomShaderGUI : ShaderGUI
         editor = materialEditor;
         materials = materialEditor.targets;
         this.properties = properties;
+        BakedEmission();
         EditorGUILayout.Space();
         showPresets = EditorGUILayout.Foldout(showPresets, "Presets", true);
         if (showPresets)
@@ -83,6 +83,43 @@ public class CustomShaderGUI : ShaderGUI
         if (EditorGUI.EndChangeCheck())
         {
             SetShadowCasterPass();
+        }
+        if (EditorGUI.EndChangeCheck())
+        {
+            SetShadowCasterPass();
+            CopyLightMappingProperties();
+        }
+    }
+
+    void CopyLightMappingProperties()
+    {
+        MaterialProperty mainTex = FindProperty("_MainTex", properties, false);
+        MaterialProperty baseMap = FindProperty("_BaseMap", properties, false);
+        if (mainTex != null && baseMap != null)
+        {
+            mainTex.textureValue = baseMap.textureValue;
+            mainTex.textureScaleAndOffset = baseMap.textureScaleAndOffset;
+        }
+        MaterialProperty color = FindProperty("_Color", properties, false);
+        MaterialProperty baseColor =
+        FindProperty("_BaseColor", properties, false);
+        if (color != null && baseColor != null)
+        {
+            color.colorValue = baseColor.colorValue;
+        }
+    }
+
+    //ºæ±º×Ô·¢¹â
+    void BakedEmission()
+    {
+        EditorGUI.BeginChangeCheck();
+        editor.LightmapEmissionProperty();
+        if (EditorGUI.EndChangeCheck())
+        {
+            foreach (Material m in editor.targets)
+            {
+                m.globalIlluminationFlags &= ~MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+            }
         }
     }
 

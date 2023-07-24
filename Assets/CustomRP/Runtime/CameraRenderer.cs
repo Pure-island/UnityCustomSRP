@@ -87,7 +87,8 @@ public partial class CameraRenderer
         var drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings)
         {
             enableDynamicBatching = useDynamicBatching,
-            enableInstancing = useGPUInstancing
+            enableInstancing = useGPUInstancing,
+            perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume
         };
         drawingSettings.SetShaderPassName(1, litShaderTagId);
         //只绘制不透明物体，render queue在0-2500

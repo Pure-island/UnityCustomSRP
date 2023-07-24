@@ -1,16 +1,16 @@
 #ifndef CUSTOM_SHADOW_CASTER_PASS_INCLUDED
 #define CUSTOM_SHADOW_CASTER_PASS_INCLUDED
-#include "../ShaderLibrary/Common.hlsl"
+//#include "../ShaderLibrary/Common.hlsl"
  
-TEXTURE2D(_BaseMap);
-SAMPLER(sampler_BaseMap);
+//TEXTURE2D(_BaseMap);
+//SAMPLER(sampler_BaseMap);
  
-UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
-//提供纹理的缩放和平移
-UNITY_DEFINE_INSTANCED_PROP(float4, _BaseMap_ST)
-UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
-UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
-UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
+//UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
+////提供纹理的缩放和平移
+//UNITY_DEFINE_INSTANCED_PROP(float4, _BaseMap_ST)
+//UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
+//UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
+//UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
  
 //用作顶点函数的输入参数
 struct Attributes
@@ -45,21 +45,21 @@ Varyings ShadowCasterPassVertex(Attributes input)
 #endif
     
     //计算缩放和偏移后的UV坐标
-    float4 baseST = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseMap_ST);
-    output.baseUV = input.baseUV * baseST.xy + baseST.zw;
+    //计算缩放和偏移后的UV坐标
+    //float4 baseST = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseMap_ST);
+    output.baseUV = TransformBaseUV(input.baseUV);
     return output;
 }
 //片元函数
 void ShadowCasterPassFragment(Varyings input)
 {
     UNITY_SETUP_INSTANCE_ID(input);
-    float4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.baseUV);
-    // 通过UNITY_ACCESS_INSTANCED_PROP访问material属性
-    float4 baseColor = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseColor);
-    float4 base = baseMap * baseColor;
+    //float4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.baseUV);
+    //float4 baseColor = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _BaseColor);
+    float4 base = GetBase(input.baseUV);
 #if defined(_SHADOWS_CLIP)
     //透明度低于阈值的片元进行舍弃
-    clip(base.a - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Cutoff));
+    clip(base.a - GetCutoff(input.baseUV));
 #elif defined(_SHADOWS_DITHER)
     float dither = InterleavedGradientNoise(input.positionCS.xy, 0);
     clip(base.a - dither);
