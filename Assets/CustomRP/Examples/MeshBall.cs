@@ -52,17 +52,18 @@ public class MeshBall : MonoBehaviour
             block.SetVectorArray(baseColorId, baseColors);
             block.SetFloatArray(metallicId, metallic);
             block.SetFloatArray(smoothnessId, smoothness);
-            if (!lightProbeVolume)
+            
+            var positions = new Vector3[1023];
+            for (int i = 0; i < matrices.Length; i++)
             {
-                var positions = new Vector3[1023];
-                for (int i = 0; i < matrices.Length; i++)
-                {
-                    positions[i] = matrices[i].GetColumn(3);
-                }
-                var lightProbes = new SphericalHarmonicsL2[1023];
-                LightProbes.CalculateInterpolatedLightAndOcclusionProbes(positions, lightProbes, null);
-                block.CopySHCoefficientArraysFrom(lightProbes);
+                positions[i] = matrices[i].GetColumn(3);
             }
+            var lightProbes = new SphericalHarmonicsL2[1023];
+            var occlusionProbes = new Vector4[1023];
+            LightProbes.CalculateInterpolatedLightAndOcclusionProbes(positions, lightProbes, occlusionProbes);
+            block.CopySHCoefficientArraysFrom(lightProbes);
+            block.CopyProbeOcclusionArrayFrom(occlusionProbes);
+
             block.SetFloat(cutoffId, cutoff);
         }
         //»æÖÆÍø¸ñÊµÀý
