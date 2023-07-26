@@ -20,7 +20,7 @@ float3 GetLighting(Surface surfaceWS, BRDF brdf, GI gi)
     shadowData.shadowMask = gi.shadowMask;
     //return gi.shadowMask.shadows.rgb;
     //可见光的光照结果进行累加得到最终光照结果
-    float3 color = gi.diffuse * brdf.diffuse;
+    float3 color = IndirectBRDF(surfaceWS, brdf, gi.diffuse, gi.specular);
     for (int i = 0; i < GetDirectionalLightCount(); i++)
     {
         Light light = GetDirectionalLight(i, surfaceWS, shadowData);
