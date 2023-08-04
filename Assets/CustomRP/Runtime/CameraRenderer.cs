@@ -18,7 +18,7 @@ public partial class CameraRenderer
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
     Lighting lighting = new Lighting();
 
-    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings)
+    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject, ShadowSettings shadowSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -28,10 +28,10 @@ public partial class CameraRenderer
         if (!Cull(shadowSettings.maxDistance)) return;    //裁剪并将结果存入cullingResults
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
-        lighting.Setup(context, cullingResults, shadowSettings);//设置照明
+        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);//设置照明
         buffer.EndSample(SampleName);
         Setup();                                                //初始化                        
-        DrawVisibleGeometry(useDynamicBatching,useGPUInstancing);  //绘制可见物体
+        DrawVisibleGeometry(useDynamicBatching,useGPUInstancing, useLightsPerObject);  //绘制可见物体
         DrawUnsupportedShaders();//绘制SRP不支持的着色器类型
         DrawGizmos();           //绘制Gizmos
         lighting.Cleanup();
@@ -79,8 +79,9 @@ public partial class CameraRenderer
     }
 
     //绘制可见物
-    private void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing)
+    private void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject)
     {
+        PerObjectData lightsPerObjectFlags = useLightsPerObject ? PerObjectData.LightData | PerObjectData.LightIndices : PerObjectData.None;
         //设置渲染相机的绘制顺序（远到近）
         var sortingSettings = new SortingSettings(camera) { criteria = SortingCriteria.CommonOpaque };
         //设置shader pass和排序模式
@@ -88,8 +89,8 @@ public partial class CameraRenderer
         {
             enableDynamicBatching = useDynamicBatching,
             enableInstancing = useGPUInstancing,
-            perObjectData = PerObjectData.Lightmaps | PerObjectData.ShadowMask | PerObjectData.LightProbe | PerObjectData.OcclusionProbe 
-            | PerObjectData.LightProbeProxyVolume | PerObjectData.OcclusionProbeProxyVolume| PerObjectData.ReflectionProbes
+            perObjectData = PerObjectData.Lightmaps | PerObjectData.ShadowMask | PerObjectData.LightProbe | PerObjectData.OcclusionProbe |
+            PerObjectData.LightProbeProxyVolume | PerObjectData.OcclusionProbeProxyVolume | PerObjectData.ReflectionProbes | lightsPerObjectFlags
         };
         drawingSettings.SetShaderPassName(1, litShaderTagId);
         //只绘制不透明物体，render queue在0-2500

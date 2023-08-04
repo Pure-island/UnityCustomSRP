@@ -119,6 +119,22 @@ public class Shadows
         return new Vector4(0f, 0f, 0f, -1f);
     }
 
+    //存储其他类型光源的阴影
+    public Vector4 ReserveOtherShadows(Light light, int visibleLightIndex)
+    {
+        if (light.shadows != LightShadows.None && light.shadowStrength > 0f)
+        {
+            LightBakingOutput lightBaking = light.bakingOutput;
+            if (lightBaking.lightmapBakeType == LightmapBakeType.Mixed && lightBaking.mixedLightingMode == MixedLightingMode.Shadowmask
+                )
+            {
+                useShadowMask = true;
+                return new Vector4(light.shadowStrength, 0f, 0f, lightBaking.occlusionMaskChannel);
+            }
+        }
+        return new Vector4(0f, 0f, 0f, -1f);
+    }
+
     public void Setup(
         ScriptableRenderContext context, CullingResults cullingResults,
         ShadowSettings settings

@@ -3,6 +3,7 @@
 #define CUSTOM_LIGHT_INCLUDED
 
 #define MAX_DIRECTIONAL_LIGHT_COUNT 4
+#define MAX_OTHER_LIGHT_COUNT 64
 //多个平行光的属性
 CBUFFER_START(_CustomLight)
     //float3 _DirectionalLightColor;
@@ -12,6 +13,13 @@ CBUFFER_START(_CustomLight)
     float4 _DirectionalLightDirections[MAX_DIRECTIONAL_LIGHT_COUNT];
     //阴影数据
     float4 _DirectionalLightShadowData[MAX_DIRECTIONAL_LIGHT_COUNT];
+    //非定向光源的属性
+    int _OtherLightCount;
+    float4 _OtherLightColors[MAX_OTHER_LIGHT_COUNT];
+    float4 _OtherLightPositions[MAX_OTHER_LIGHT_COUNT];
+    float4 _OtherLightDirections[MAX_OTHER_LIGHT_COUNT];
+    float4 _OtherLightSpotAngles[MAX_OTHER_LIGHT_COUNT];
+    float4 _OtherLightShadowData[MAX_OTHER_LIGHT_COUNT];
 CBUFFER_END
 
 //灯光的属性
@@ -34,6 +42,14 @@ DirectionalShadowData GetDirectionalShadowData(int lightIndex, ShadowData shadow
     data.shadowMaskChannel = _DirectionalLightShadowData[lightIndex].w;
     return data;
 }
+//获取其他类型光源的阴影数据
+OtherShadowData GetOtherShadowData(int lightIndex)
+{
+    OtherShadowData data;
+    data.strength = _OtherLightShadowData[lightIndex].x;
+    data.shadowMaskChannel = _OtherLightShadowData[lightIndex].w;
+    return data;
+}
 
 //获取方向光的数量
 int GetDirectionalLightCount()
@@ -53,6 +69,32 @@ Light GetDirectionalLight(int index, Surface surfaceWS, ShadowData shadowData)
     //得到阴影衰减
     light.attenuation = GetDirectionalShadowAttenuation(dirShadowData, shadowData, surfaceWS);
     return light;
+}
+
+//获取指定索引的非定向光源数据
+Light GetOtherLight(int index, Surface surfaceWS, ShadowData shadowData) 
+{
+    Light light;
+    light.color = _OtherLightColors[index].rgb;
+    float3 ray = _OtherLightPositions[index].xyz - surfaceWS.position;
+    light.direction = normalize(ray);
+    //光照强度随距离衰减
+    float distanceSqr = max(dot(ray, ray), 0.00001);
+    //套用公式计算随光照范围衰减
+    float rangeAttenuation = Square(saturate(1.0 - Square(distanceSqr * _OtherLightPositions[index].w)));
+    float4 spotAngles = _OtherLightSpotAngles[index];
+    //计算聚光灯衰减值
+    float spotAttenuation = Square(saturate(dot(_OtherLightDirections[index].xyz, light.direction) * spotAngles.x + spotAngles.y));
+    OtherShadowData otherShadowData = GetOtherShadowData(index);
+    //光照强度随范围和距离衰减
+    light.attenuation = GetOtherShadowAttenuation(otherShadowData, shadowData, surfaceWS) * spotAttenuation * rangeAttenuation / distanceSqr;
+    return light;
+}
+
+//获取非定向光源的数量
+int GetOtherLightCount()
+{
+    return _OtherLightCount;
 }
  
 #endif
