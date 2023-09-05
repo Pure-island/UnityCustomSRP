@@ -31,3 +31,5 @@ MonoBehaviour:
     other:
       atlasSize: 4096
       filter: 2
+  postFXSettings: {fileID: 11400000, guid: d205e94348b041548a05beff2ac69a4d, type: 2}
+  allowHDR: 1

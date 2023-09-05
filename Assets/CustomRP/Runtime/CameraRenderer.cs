@@ -16,9 +16,12 @@ public partial class CameraRenderer
     CullingResults cullingResults;
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
     static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
+    static int frameBufferId = Shader.PropertyToID("_CameraFrameBuffer");
     Lighting lighting = new Lighting();
+    PostFXStack postFXStack = new PostFXStack();
+    bool useHDR;
 
-    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject, ShadowSettings shadowSettings)
+    public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR, bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -26,19 +29,34 @@ public partial class CameraRenderer
         PrepareBuffer();        //设置SampleName
         PrepareForSceneWindow();//绘制UI
         if (!Cull(shadowSettings.maxDistance)) return;    //裁剪并将结果存入cullingResults
+        useHDR = allowHDR && camera.allowHDR;
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);//设置照明
+        postFXStack.Setup(context, camera, postFXSettings, useHDR);//设置后处理
         buffer.EndSample(SampleName);
         Setup();                                                //初始化                        
         DrawVisibleGeometry(useDynamicBatching,useGPUInstancing, useLightsPerObject);  //绘制可见物体
         DrawUnsupportedShaders();//绘制SRP不支持的着色器类型
-        DrawGizmos();           //绘制Gizmos
-        lighting.Cleanup();
+        DrawGizmosBeforeFX();          //绘制Gizmos
+        if (postFXStack.IsActive)
+        {
+            postFXStack.Render(frameBufferId);
+        }
+        DrawGizmosAfterFX();
+        Cleanup();
         Submit();               //提交
     }
 
+    private void Cleanup()
+    {
+        lighting.Cleanup();
 
+        if (postFXStack.IsActive)
+        {
+            buffer.ReleaseTemporaryRT(frameBufferId);
+        }
+    }
 
     private bool Cull(float maxShadowDistance)
     {
@@ -56,6 +74,16 @@ public partial class CameraRenderer
     {
         context.SetupCameraProperties(camera);              //设置相机属性
         CameraClearFlags flags = camera.clearFlags;         //得到相机的clear flags
+        if (postFXStack.IsActive)
+        {
+            if (flags > CameraClearFlags.Color)
+            {
+                flags = CameraClearFlags.Color;
+            }
+            buffer.GetTemporaryRT(frameBufferId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Bilinear, useHDR ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.Default);
+            buffer.SetRenderTarget(frameBufferId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+        }
+
         //设置相机清除状态
         buffer.ClearRenderTarget(flags <= CameraClearFlags.Depth,
                                 flags == CameraClearFlags.Color,

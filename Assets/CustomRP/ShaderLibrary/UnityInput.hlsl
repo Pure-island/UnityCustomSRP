@@ -25,6 +25,7 @@ float4 unity_SpecCube0_HDR;
 //unity_LightData的Y分量中包含了灯光数量， unity_LightIndices的两个分量都包含一个光源索引，所以每个对象最多支持8个。
 real4 unity_LightData;
 real4 unity_LightIndices[2];
+float4 _ProjectionParams;
 CBUFFER_END
 
 float4x4 unity_MatrixVP;

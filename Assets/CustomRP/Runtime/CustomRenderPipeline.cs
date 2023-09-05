@@ -10,10 +10,13 @@ public partial class CustomRenderPipeline : RenderPipeline
     bool useGPUInstancing;
     bool useLightsPerObject;
     ShadowSettings shadowSettings;
+    PostFXSettings postFXSettings;
+    bool allowHDR;
 
     //测试SRP合批启用
-    public CustomRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, ShadowSettings shadowSettings)
+    public CustomRenderPipeline(bool allowHDR, bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
     {
+        this.allowHDR = allowHDR;
         GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
         //灯光使用线性强度
         GraphicsSettings.lightsUseLinearIntensity = true;
@@ -21,15 +24,16 @@ public partial class CustomRenderPipeline : RenderPipeline
         this.useGPUInstancing = useGPUInstancing;
         this.useLightsPerObject = useLightsPerObject;
         this.shadowSettings = shadowSettings;
+        this.postFXSettings = postFXSettings;
 
         InitializeForEditor();
     }
 
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
-        foreach (Camera camera in cameras) 
+        foreach (Camera camera in cameras)
         {
-            renderer.Render(context, camera, useDynamicBatching, useGPUInstancing, useLightsPerObject, shadowSettings);
+            renderer.Render(context, camera, allowHDR, useDynamicBatching, useGPUInstancing, useLightsPerObject, shadowSettings, postFXSettings);
         }
     }
 }
