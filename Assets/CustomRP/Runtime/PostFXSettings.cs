@@ -23,6 +23,7 @@ public class PostFXSettings : ScriptableObject
             return material;
         }
     }
+    
 
     [System.Serializable]
     public struct BloomSettings
@@ -46,10 +47,37 @@ public class PostFXSettings : ScriptableObject
 
         //淡化闪烁 
         public bool fadeFireflies;
+
+        public enum Mode { Additive, Scattering }
+        public Mode mode;
+        [Range(0.05f, 0.95f)]
+        public float scatter;
     }
     [SerializeField]
 
-    BloomSettings bloom = default;
+    BloomSettings bloom = new BloomSettings
+    {
+        scatter = 0.7f
+    };
 
     public BloomSettings Bloom => bloom;
+
+    [System.Serializable]
+
+    public struct ToneMappingSettings
+    {
+        public enum Mode {
+            None = -1,
+            Reinhard,
+            Neutral,
+            ACES
+
+        }
+        public Mode mode;
+
+    }
+    [SerializeField]
+
+    ToneMappingSettings toneMapping = default;
+    public ToneMappingSettings ToneMapping => toneMapping;
 }
