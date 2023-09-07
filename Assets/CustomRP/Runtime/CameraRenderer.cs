@@ -21,7 +21,7 @@ public partial class CameraRenderer
     PostFXStack postFXStack = new PostFXStack();
     bool useHDR;
 
-    public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR, bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings)
+    public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR, bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings, int colorLUTResolution)
     {
         this.context = context;
         this.camera = camera;
@@ -33,7 +33,7 @@ public partial class CameraRenderer
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);//设置照明
-        postFXStack.Setup(context, camera, postFXSettings, useHDR);//设置后处理
+        postFXStack.Setup(context, camera, postFXSettings, useHDR, colorLUTResolution);//设置后处理
         buffer.EndSample(SampleName);
         Setup();                                                //初始化                        
         DrawVisibleGeometry(useDynamicBatching,useGPUInstancing, useLightsPerObject);  //绘制可见物体

@@ -25,3 +25,28 @@ MonoBehaviour:
     scatter: 0.245
   toneMapping:
     mode: 2
+  colorAdjustments:
+    postExposure: 1.27
+    contrast: -21.7
+    colorFilter: {r: 1, g: 0.94269943, b: 0.6367924, a: 1}
+    hueShift: 0
+    saturation: 3.6
+  whiteBalance:
+    temperature: -57.6
+    tint: 47.5
+  splitToning:
+    shadows: {r: 0.5286579, g: 0.6650456, b: 0.8301887, a: 1}
+    highlights: {r: 1, g: 0.83826643, b: 0.3443396, a: 1}
+    balance: 0
+  channelMixer:
+    red: {x: 1, y: 0, z: 0}
+    green: {x: 0, y: 1, z: 0}
+    blue: {x: 0, y: 0, z: 1}
+  shadowsMidtonesHighlights:
+    shadows: {r: 0.94742554, g: 1, b: 0.8915094, a: 1}
+    midtones: {r: 0.8050018, g: 0.8490566, b: 0.8432903, a: 1}
+    highlights: {r: 1, g: 1, b: 1, a: 1}
+    shadowsStart: 0
+    shadowsEnd: 0.3
+    highlightsStart: 0.55
+    highLightsEnd: 1
