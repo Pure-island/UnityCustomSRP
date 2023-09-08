@@ -10,6 +10,7 @@
 #define UNITY_MATRIX_P glstate_matrix_projection
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 //使用UnityInput里面的字段前先include进来
 #include "UnityInput.hlsl"
 #if defined(_SHADOW_MASK_ALWAYS) || defined(_SHADOW_MASK_DISTANCE)
@@ -38,6 +39,24 @@ float Square(float v)
 float DistanceSquared(float3 pA, float3 pB)
 {
     return dot(pA - pB, pA - pB);
+}
+
+//解码法线数据，得到原来的法线向量
+float3 DecodeNormal(float4 sample, float scale)
+{
+#if defined(UNITY_NO_DXT5nm)
+    return UnpackNormalRGB(sample, scale);
+#else
+    return UnpackNormalmapRGorAG(sample, scale);
+#endif
+}
+
+//将法线从切线空间转换到世界空间
+float3 NormalTangentToWorld(float3 normalTS, float3 normalWS, float4 tangentWS)
+{
+    //构建切线到世界空间的转换矩阵，需要世界空间的法线、世界空间的切线的XYZ和W分量
+    float3x3 tangentToWorld = CreateTangentToWorld(normalWS, tangentWS.xyz, tangentWS.w);
+    return TransformTangentToWorld(normalTS, tangentToWorld);
 }
 
 void ClipLOD(float2 positionCS, float fade)

@@ -242,13 +242,13 @@ float GetBakedShadow(ShadowMask mask, int channel, float strength)
 float GetCascadedShadow(DirectionalShadowData directional, ShadowData global, Surface surfaceWS)
 {
     //计算法线偏移
-    float3 normalBias = surfaceWS.normal * (directional.normalBias * _CascadeData[global.multi_cascadeIndex].y);
+    float3 normalBias = surfaceWS.interpolatedNormal * (directional.normalBias * _CascadeData[global.cascadeIndex].y);
     //加上法线偏移后的表面顶点位置，通过阴影转换矩阵和表面位置得到在阴影纹理(图块)空间的位置 得到在阴影纹理空间的新位置，然后对图集进行采样  
     float3 positionSTS = mul(_DirectionalShadowMatrices[directional.tileIndex], float4(surfaceWS.position + normalBias, 1.0)).xyz;
     float shadow = FilterDirectionalShadow(positionSTS);
     if (global.cascadeBlend < 1.0)
     {
-        normalBias = surfaceWS.normal * (directional.normalBias * _CascadeData[global.multi_cascadeIndex + 1].y);
+        normalBias = surfaceWS.interpolatedNormal * (directional.normalBias * _CascadeData[global.cascadeIndex + 1].y);
         positionSTS = mul(_DirectionalShadowMatrices[directional.tileIndex + 1], float4(surfaceWS.position + normalBias, 1.0)).xyz;
         shadow = lerp(FilterDirectionalShadow(positionSTS), shadow, global.cascadeBlend);
     }

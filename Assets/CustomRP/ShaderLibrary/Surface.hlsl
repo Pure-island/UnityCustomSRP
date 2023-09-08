@@ -4,6 +4,7 @@
 struct Surface
 {
     float3 normal;
+    float3 interpolatedNormal;
     float3 color;
     float alpha;
     float metallic;
@@ -18,6 +19,9 @@ struct Surface
     //菲涅尔反射强度
     float fresnelStrength;
     uint renderingLayerMask;
+    //遮挡数据
+    float occlusion;
+    
 };
  
 #endif
