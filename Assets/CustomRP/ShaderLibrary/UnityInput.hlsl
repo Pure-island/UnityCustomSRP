@@ -26,6 +26,7 @@ float4 unity_SpecCube0_HDR;
 real4 unity_LightData;
 real4 unity_LightIndices[2];
 float4 _ProjectionParams;
+float4 unity_RenderingLayer;
 CBUFFER_END
 
 float4x4 unity_MatrixVP;

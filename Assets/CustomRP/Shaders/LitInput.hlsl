@@ -15,6 +15,7 @@ UNITY_DEFINE_INSTANCED_PROP(float, _Metallic)
 UNITY_DEFINE_INSTANCED_PROP(float, _Smoothness)
 UNITY_DEFINE_INSTANCED_PROP(float4, _EmissionColor)
 UNITY_DEFINE_INSTANCED_PROP(float, _Fresnel)
+UNITY_DEFINE_INSTANCED_PROP(float, _ZWrite)
 UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
  
 float2 TransformBaseUV(float2 baseUV)
@@ -56,5 +57,8 @@ float GetSmoothness(float2 baseUV)
 {
     return UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _Smoothness);
 }
-  
+float GetFinalAlpha(float alpha)
+{
+    return UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _ZWrite) ? 1.0 : alpha;
+}
 #endif

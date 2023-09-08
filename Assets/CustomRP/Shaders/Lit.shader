@@ -27,19 +27,22 @@ Shader "CustomRP/Lit"
 		[HideInInspector] _MainTex("Texture for Lightmap", 2D) = "white" {}
 		[HideInInspector] _Color("Color for Lightmap", Color) = (0.5, 0.5, 0.5, 1.0)		
 	}
+	
 	Subshader
 	{
 	    HLSLINCLUDE
         #include "../ShaderLibrary/Common.hlsl"
         #include "LitInput.hlsl"
         ENDHLSL
+		
 		Pass
 		{
 			Tags
 			{
 				"LightMode" = "CustomLit"
 			}
-			Blend[_SrcBlend][_DstBlend]
+			 //定义混合模式
+			Blend[_SrcBlend][_DstBlend], One OneMinusSrcAlpha
 			ZWrite[_ZWrite]
 			HLSLPROGRAM
 			#pragma enable_d3d11_debug_symbols

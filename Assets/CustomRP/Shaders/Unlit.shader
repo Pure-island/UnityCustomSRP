@@ -20,7 +20,8 @@ Shader "CustomRP/Unlit"
 		ENDHLSL
 		Pass
 		{
-			Blend[_SrcBlend][_DstBlend]
+			 //定义混合模式
+			Blend[_SrcBlend][_DstBlend], One OneMinusSrcAlpha
 			ZWrite[_ZWrite]
 			HLSLPROGRAM
 			#pragma shader_feature _CLIPPING

@@ -17,6 +17,7 @@ struct Surface
     float dither;
     //·ÆÄù¶û·´ÉäÇ¿¶È
     float fresnelStrength;
+    uint renderingLayerMask;
 };
  
 #endif

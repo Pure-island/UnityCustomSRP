@@ -9,6 +9,7 @@ UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)
 UNITY_DEFINE_INSTANCED_PROP(float4, _BaseMap_ST)
 UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
 UNITY_DEFINE_INSTANCED_PROP(float, _Cutoff)
+UNITY_DEFINE_INSTANCED_PROP(float, _ZWrite)
 UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)
  
 
@@ -33,5 +34,9 @@ float GetCutoff(float2 baseUV)
 float3 GetEmission(float2 baseUV)
 {
     return GetBase(baseUV).rgb;
+}
+float GetFinalAlpha(float alpha)
+{
+    return UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial, _ZWrite) ? 1.0 : alpha;
 }
 #endif

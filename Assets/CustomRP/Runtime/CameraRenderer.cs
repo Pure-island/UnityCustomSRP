@@ -20,11 +20,19 @@ public partial class CameraRenderer
     Lighting lighting = new Lighting();
     PostFXStack postFXStack = new PostFXStack();
     bool useHDR;
+    static CameraSettings defaultCameraSettings = new CameraSettings();
 
     public void Render(ScriptableRenderContext context, Camera camera, bool allowHDR, bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings, int colorLUTResolution)
     {
         this.context = context;
         this.camera = camera;
+        var crpCamera = camera.GetComponent<CustomRenderPipelineCamera>();
+        CameraSettings cameraSettings = crpCamera ? crpCamera.Settings : defaultCameraSettings;
+        //如果需要覆盖后处理配置，将渲染管线的后处理配置替换成该相机的后处理配置
+        if (cameraSettings.overridePostFX)
+        {
+            postFXSettings = cameraSettings.postFXSettings;
+        }
 
         PrepareBuffer();        //设置SampleName
         PrepareForSceneWindow();//绘制UI
@@ -32,11 +40,11 @@ public partial class CameraRenderer
         useHDR = allowHDR && camera.allowHDR;
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
-        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject);//设置照明
-        postFXStack.Setup(context, camera, postFXSettings, useHDR, colorLUTResolution);//设置后处理
+        lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject, cameraSettings.maskLights ? cameraSettings.renderingLayerMask : -1);//设置照明
+        postFXStack.Setup(context, camera, postFXSettings, useHDR, colorLUTResolution, cameraSettings.finalBlendMode);//设置后处理
         buffer.EndSample(SampleName);
         Setup();                                                //初始化                        
-        DrawVisibleGeometry(useDynamicBatching,useGPUInstancing, useLightsPerObject);  //绘制可见物体
+        DrawVisibleGeometry(useDynamicBatching,useGPUInstancing, useLightsPerObject, cameraSettings.renderingLayerMask);  //绘制可见物体
         DrawUnsupportedShaders();//绘制SRP不支持的着色器类型
         DrawGizmosBeforeFX();          //绘制Gizmos
         if (postFXStack.IsActive)
@@ -107,7 +115,7 @@ public partial class CameraRenderer
     }
 
     //绘制可见物
-    private void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject)
+    private void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing, bool useLightsPerObject, int renderingLayerMask)
     {
         PerObjectData lightsPerObjectFlags = useLightsPerObject ? PerObjectData.LightData | PerObjectData.LightIndices : PerObjectData.None;
         //设置渲染相机的绘制顺序（远到近）
@@ -122,7 +130,7 @@ public partial class CameraRenderer
         };
         drawingSettings.SetShaderPassName(1, litShaderTagId);
         //只绘制不透明物体，render queue在0-2500
-        var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
+        var filteringSettings = new FilteringSettings(RenderQueueRange.opaque, renderingLayerMask: (uint)renderingLayerMask);
         //1.不透明物体绘制
         context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
 
