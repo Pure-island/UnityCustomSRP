@@ -12,7 +12,7 @@ struct Varyings
 TEXTURE2D(_PostFXSource);
 TEXTURE2D(_PostFXSource2);
 TEXTURE2D(_ColorGradingLUT);
-SAMPLER(sampler_linear_clamp);
+//SAMPLER(sampler_linear_clamp);
 float4 _PostFXSource_TexelSize;
 bool _BloomBicubicUpsampling;
 float4 _BloomThreshold;

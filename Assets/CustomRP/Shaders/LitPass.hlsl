@@ -24,7 +24,7 @@ struct Attributes
 //片元函数输入结构体
 struct Varyings
 {
-    float4 positionCS : SV_POSITION;
+    float4 positionCS_SS : SV_POSITION;
     float3 positionWS : VAR_POSITION;
     float2 baseUV : VAR_BASE_UV;
 #if defined(_DETAIL_MAP)
@@ -50,7 +50,7 @@ Varyings LitPassVertex(Attributes input)
 	//使UnlitPassVertex输出位置和索引,并复制索引
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     output.positionWS = TransformObjectToWorld(input.positionOS);
-    output.positionCS = TransformWorldToHClip(output.positionWS);
+    output.positionCS_SS = TransformWorldToHClip(output.positionWS);
 	//计算世界空间的法线
     output.normalWS = TransformObjectToWorldNormal(input.normalOS);
 #if defined(_NORMAL_MAP)
@@ -67,9 +67,10 @@ Varyings LitPassVertex(Attributes input)
 //片元函数
 float4 LitPassFragment(Varyings input) : SV_TARGET
 {
-    UNITY_SETUP_INSTANCE_ID(input);
-    ClipLOD(input.positionCS.xy, unity_LODFade.x);
-    InputConfig config = GetInputConfig(input.baseUV);
+    UNITY_SETUP_INSTANCE_ID(input);    
+    InputConfig config = GetInputConfig(input.positionCS_SS, input.baseUV);
+    //return float4(config.fragment.depth.xxx / 20.0, 1.0);
+    ClipLOD(config.fragment, unity_LODFade.x);
 #if defined(_DETAIL_MAP)
 	config.detailUV = input.detailUV;
 	config.useDetail = true;
@@ -103,7 +104,7 @@ float4 LitPassFragment(Varyings input) : SV_TARGET
     surface.smoothness = GetSmoothness(config);
     surface.fresnelStrength = GetFresnel(config);
 	//计算抖动值
-    surface.dither = InterleavedGradientNoise(input.positionCS.xy, 0);
+    surface.dither = InterleavedGradientNoise(config.fragment.positionSS, 0);
     surface.renderingLayerMask = asuint(unity_RenderingLayer.x);
 	//通过表面属性和BRDF计算最终光照结果
 #if defined(_PREMULTIPLY_ALPHA)

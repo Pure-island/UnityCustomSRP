@@ -21,4 +21,6 @@ public class CameraSettings
     public PostFXSettings postFXSettings = default;
     public int renderingLayerMask = -1;
     public bool maskLights = false;
+    public bool copyDepth = true;
+    public bool copyColor = true;
 }

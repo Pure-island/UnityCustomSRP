@@ -5,20 +5,23 @@ using UnityEngine.Rendering;
 
 public partial class CustomRenderPipeline : RenderPipeline
 {
-    CameraRenderer renderer = new CameraRenderer();
+    //CameraRenderer renderer = new CameraRenderer();
+    CameraRenderer renderer;
     bool useDynamicBatching;
     bool useGPUInstancing;
     bool useLightsPerObject;
     ShadowSettings shadowSettings;
     PostFXSettings postFXSettings;
-    bool allowHDR;
+    //bool allowHDR;
+    CameraBufferSettings cameraBufferSettings;
     int colorLUTResolution;
 
     //测试SRP合批启用
-    public CustomRenderPipeline(bool allowHDR, bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings, int colorLUTResolution)
+    public CustomRenderPipeline(CameraBufferSettings cameraBufferSettings, bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, bool useLightsPerObject, ShadowSettings shadowSettings, PostFXSettings postFXSettings, int colorLUTResolution, Shader cameraRendererShader)
     {
         this.colorLUTResolution = colorLUTResolution;
-        this.allowHDR = allowHDR;
+        //this.allowHDR = allowHDR;
+        this.cameraBufferSettings = cameraBufferSettings;
         GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
         //灯光使用线性强度
         GraphicsSettings.lightsUseLinearIntensity = true;
@@ -27,6 +30,7 @@ public partial class CustomRenderPipeline : RenderPipeline
         this.useLightsPerObject = useLightsPerObject;
         this.shadowSettings = shadowSettings;
         this.postFXSettings = postFXSettings;
+        renderer = new CameraRenderer(cameraRendererShader);
 
         InitializeForEditor();
     }
@@ -35,7 +39,7 @@ public partial class CustomRenderPipeline : RenderPipeline
     {
         foreach (Camera camera in cameras)
         {
-            renderer.Render(context, camera, allowHDR, useDynamicBatching, useGPUInstancing, useLightsPerObject, shadowSettings, postFXSettings, colorLUTResolution);
+            renderer.Render(context, camera, cameraBufferSettings, useDynamicBatching, useGPUInstancing, useLightsPerObject, shadowSettings, postFXSettings, colorLUTResolution);
         }
     }
 }

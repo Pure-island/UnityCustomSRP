@@ -18,6 +18,22 @@
 #endif
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
+SAMPLER(sampler_linear_clamp);
+SAMPLER(sampler_point_clamp);
+SAMPLER(sampler_CameraColorTexture);
+//根据unity_OrthoParams的W分量是0还是1判断是否使用的是正交相机
+bool IsOrthographicCamera()
+{
+    return unity_OrthoParams.w;
+}
+float OrthographicDepthBufferToLinear(float rawDepth)
+{
+#if UNITY_REVERSED_Z
+        rawDepth = 1.0 - rawDepth;
+#endif
+    return (_ProjectionParams.z - _ProjectionParams.y) * rawDepth + _ProjectionParams.y;
+}
+#include "Fragment.hlsl"
 
 ////函数功能：顶点从模型空间转换到世界空间
 //float3 TransformObjectToWorld(float3 positionOS)
@@ -59,11 +75,11 @@ float3 NormalTangentToWorld(float3 normalTS, float3 normalWS, float4 tangentWS)
     return TransformTangentToWorld(normalTS, tangentToWorld);
 }
 
-void ClipLOD(float2 positionCS, float fade)
+void ClipLOD(Fragment fragment, float fade)
 {
 #if defined(LOD_FADE_CROSSFADE)
-    float dither = InterleavedGradientNoise(positionCS.xy, 0);
-    clip(fade + (fade < 0.0 ? dither : -dither));
+        float dither = InterleavedGradientNoise(fragment.positionSS, 0);
+        clip(fade + (fade < 0.0 ? dither : -dither));
 #endif
 }
 

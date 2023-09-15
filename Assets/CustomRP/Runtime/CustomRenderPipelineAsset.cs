@@ -15,8 +15,16 @@ public partial class CustomRenderPipelineAsset : RenderPipelineAsset
     [SerializeField]
     PostFXSettings postFXSettings = default;
     //HDR设置
+    //[SerializeField]
+    //bool allowHDR = true;
     [SerializeField]
-    bool allowHDR = true;
+    CameraBufferSettings cameraBuffer = new CameraBufferSettings
+    {
+        allowHDR = true
+    };
+
+    [SerializeField]
+    Shader cameraRendererShader = default;
     public enum ColorLUTResolution
     {
         _16 = 16,
@@ -30,6 +38,6 @@ public partial class CustomRenderPipelineAsset : RenderPipelineAsset
     //返回一个RenderPipeline实例    
     protected override RenderPipeline CreatePipeline()
     {
-        return new CustomRenderPipeline(allowHDR, useDynamicBatching, useGPUInstancing, useSRPBatcher, useLightsPerObject, shadows, postFXSettings, (int)colorLUTResolution);
+        return new CustomRenderPipeline(cameraBuffer, useDynamicBatching, useGPUInstancing, useSRPBatcher, useLightsPerObject, shadows, postFXSettings, (int)colorLUTResolution, cameraRendererShader);
     }
 }

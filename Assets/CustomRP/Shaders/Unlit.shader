@@ -11,6 +11,8 @@ Shader "CustomRP/Unlit"
 		[Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend("Src Blend", Float) = 1
 		[Enum(UnityEngine.Rendering.BlendMode)] _DstBlend("Dst Blend", Float) = 0
 		[Enum(Off,0,On,1)] _ZWrite("Z Write", Float) = 1
+
+		
 	}
 	Subshader
 	{

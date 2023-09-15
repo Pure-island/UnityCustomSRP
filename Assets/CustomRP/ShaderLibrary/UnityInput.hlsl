@@ -26,7 +26,11 @@ float4 unity_SpecCube0_HDR;
 real4 unity_LightData;
 real4 unity_LightIndices[2];
 float4 _ProjectionParams;
+//正交相机信息
+float4 unity_OrthoParams;
 float4 unity_RenderingLayer;
+float4 _ScreenParams;
+float4 _ZBufferParams;
 CBUFFER_END
 
 float4x4 unity_MatrixVP;

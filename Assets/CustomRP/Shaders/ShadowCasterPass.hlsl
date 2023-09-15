@@ -12,7 +12,7 @@ struct Attributes
 //片元函数输入结构体
 struct Varyings
 {
-    float4 positionCS : SV_POSITION;
+    float4 positionCS_SS : SV_POSITION;
     float2 baseUV : VAR_BASE_UV;
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
@@ -26,13 +26,13 @@ Varyings ShadowCasterPassVertex(Attributes input)
 	//使UnlitPassVertex输出位置和索引,并复制索引
     UNITY_TRANSFER_INSTANCE_ID(input, output);
     float3 positionWS = TransformObjectToWorld(input.positionOS);
-    output.positionCS = TransformWorldToHClip(positionWS);
+    output.positionCS_SS = TransformWorldToHClip(positionWS);
     if (_ShadowPancaking)
     {
 #if UNITY_REVERSED_Z
-		    output.positionCS.z = min(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+		    output.positionCS_SS.z = min(output.positionCS_SS.z, output.positionCS_SS.w * UNITY_NEAR_CLIP_VALUE);
 #else
-        output.positionCS.z = max(output.positionCS.z, output.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+        output.positionCS_SS.z = max(output.positionCS_SS.z, output.positionCS_SS.w * UNITY_NEAR_CLIP_VALUE);
 #endif
     }
 	
@@ -44,8 +44,9 @@ Varyings ShadowCasterPassVertex(Attributes input)
 void ShadowCasterPassFragment(Varyings input)
 {
     UNITY_SETUP_INSTANCE_ID(input);
-    ClipLOD(input.positionCS.xy, unity_LODFade.x);
-    InputConfig config = GetInputConfig(input.baseUV);
+    //ClipLOD(input.positionCS.xy, unity_LODFade.x);
+    InputConfig config = GetInputConfig(input.positionCS_SS, input.baseUV);
+    ClipLOD(config.fragment, unity_LODFade.x);
     float4 base = GetBase(config);
 #if defined(_SHADOWS_CLIP)
 	//透明度低于阈值的片元进行舍弃
