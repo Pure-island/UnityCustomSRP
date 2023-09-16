@@ -83,10 +83,11 @@ public partial class CameraRenderer
     //在game视图绘制的几何体也绘制到Scene视图中
     partial void PrepareForSceneWindow()
     {
-        if(camera.cameraType == CameraType.SceneView)
+        if (camera.cameraType == CameraType.SceneView)
         {
-            //如果切换到了Scene视图，调用此方法完成绘制
-            ScriptableRenderContext.EmitWorldGeometryForSceneView(camera); 
+            ScriptableRenderContext.EmitWorldGeometryForSceneView(camera);
+            //禁用渲染缩放
+            useScaledRendering = false;
         }
     }
 

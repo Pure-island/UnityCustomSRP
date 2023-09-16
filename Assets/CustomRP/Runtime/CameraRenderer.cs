@@ -23,6 +23,7 @@ public partial class CameraRenderer
     static int depthTextureId = Shader.PropertyToID("_CameraDepthTexture");
     static int colorTextureId = Shader.PropertyToID("_CameraColorTexture");
     static int sourceTextureId = Shader.PropertyToID("_SourceTexture");
+    static int bufferSizeId = Shader.PropertyToID("_CameraBufferSize");
     //是否正在使用深度纹理
     bool useDepthTexture;
     bool useColorTexture;
@@ -31,11 +32,14 @@ public partial class CameraRenderer
     Lighting lighting = new Lighting();
     PostFXStack postFXStack = new PostFXStack();
     bool useHDR;
+    bool useScaledRendering;
     static CameraSettings defaultCameraSettings = new CameraSettings();
     Material material;
     Texture2D missingTexture;
     //平台是否支持拷贝纹理
     static bool copyTextureSupported = SystemInfo.copyTextureSupport > CopyTextureSupport.None;
+    //最终使用的缓冲区大小
+    Vector2Int bufferSize;
     public CameraRenderer(Shader shader)
     {
         material = CoreUtils.CreateEngineMaterial(shader);
@@ -76,14 +80,29 @@ public partial class CameraRenderer
             postFXSettings = cameraSettings.postFXSettings;
         }
 
+        float renderScale = cameraSettings.GetRenderScale(bufferSettings.renderScale);
+        useScaledRendering = renderScale < 0.99f || renderScale > 1.01f;
+        //按比例缩放相机屏幕像素尺寸
+        if (useScaledRendering)
+        {
+            renderScale = Mathf.Clamp(renderScale, 0.1f, 2f);
+            bufferSize.x = (int)(camera.pixelWidth * renderScale);
+            bufferSize.y = (int)(camera.pixelHeight * renderScale);
+        }
+        else
+        {
+            bufferSize.x = camera.pixelWidth;
+            bufferSize.y = camera.pixelHeight;
+        }
         PrepareBuffer();        //设置SampleName
         PrepareForSceneWindow();//绘制UI
         if (!Cull(shadowSettings.maxDistance)) return;    //裁剪并将结果存入cullingResults
         useHDR = bufferSettings.allowHDR && camera.allowHDR;
         buffer.BeginSample(SampleName);
+        buffer.SetGlobalVector(bufferSizeId, new Vector4(1f / bufferSize.x, 1f / bufferSize.y, bufferSize.x, bufferSize.y));
         ExecuteBuffer();
         lighting.Setup(context, cullingResults, shadowSettings, useLightsPerObject, cameraSettings.maskLights ? cameraSettings.renderingLayerMask : -1);//设置照明
-        postFXStack.Setup(context, camera, postFXSettings, useHDR, colorLUTResolution, cameraSettings.finalBlendMode);//设置后处理
+        postFXStack.Setup(context, camera, bufferSize, postFXSettings, useHDR, colorLUTResolution, cameraSettings.finalBlendMode, bufferSettings.bicubicRescaling);//设置后处理
         buffer.EndSample(SampleName);
         Setup();                                                //初始化                        
         DrawVisibleGeometry(useDynamicBatching,useGPUInstancing, useLightsPerObject, cameraSettings.renderingLayerMask);  //绘制可见物体
@@ -128,7 +147,7 @@ public partial class CameraRenderer
     {
         if (useColorTexture)
         {
-            buffer.GetTemporaryRT(colorTextureId, camera.pixelWidth, camera.pixelHeight, 0, FilterMode.Bilinear,
+            buffer.GetTemporaryRT(colorTextureId, bufferSize.x, bufferSize.y, 0, FilterMode.Bilinear,
                 useHDR ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.Default);
             if (copyTextureSupported)
             {
@@ -142,7 +161,7 @@ public partial class CameraRenderer
 
         if (useDepthTexture)
         {
-            buffer.GetTemporaryRT(depthTextureId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Point, RenderTextureFormat.Depth);
+            buffer.GetTemporaryRT(depthTextureId, bufferSize.x, bufferSize.y, 32, FilterMode.Point, RenderTextureFormat.Depth);
             if (copyTextureSupported)
             {
                 buffer.CopyTexture(depthAttachmentId, depthTextureId);
@@ -182,7 +201,7 @@ public partial class CameraRenderer
         CameraClearFlags flags = camera.clearFlags;         //得到相机的clear flags
         if (postFXStack.IsActive)
         {
-            useIntermediateBuffer = useColorTexture || useDepthTexture || postFXStack.IsActive;
+            useIntermediateBuffer = useScaledRendering || useColorTexture || useDepthTexture || postFXStack.IsActive;
             if (useIntermediateBuffer)
             {
                 if (flags > CameraClearFlags.Color)
@@ -190,10 +209,8 @@ public partial class CameraRenderer
                     flags = CameraClearFlags.Color;
                 }
             }
-                buffer.GetTemporaryRT(colorAttachmentId, camera.pixelWidth, camera.pixelHeight, 0, FilterMode.Bilinear,
-                useHDR ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.Default);
-
-            buffer.GetTemporaryRT(depthAttachmentId, camera.pixelWidth, camera.pixelHeight, 32, FilterMode.Point, RenderTextureFormat.Depth);
+            buffer.GetTemporaryRT(colorAttachmentId, bufferSize.x, bufferSize.y, 0, FilterMode.Bilinear, useHDR ? RenderTextureFormat.DefaultHDR : RenderTextureFormat.Default);
+            buffer.GetTemporaryRT(depthAttachmentId, bufferSize.x, bufferSize.y, 32, FilterMode.Point, RenderTextureFormat.Depth);
 
             buffer.SetRenderTarget(colorAttachmentId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store,
                             depthAttachmentId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);

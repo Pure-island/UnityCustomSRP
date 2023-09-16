@@ -53,6 +53,9 @@ public class PostFXSettings : ScriptableObject
         public Mode mode;
         [Range(0.05f, 0.95f)]
         public float scatter;
+
+        //是否忽略渲染缩放
+        public bool ignoreRenderScale;
     }
     [SerializeField]
 
